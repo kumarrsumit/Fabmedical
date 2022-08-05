@@ -1,0 +1,102 @@
+Sub Create_Actionscipt()
+
+
+Dim ThisBook As Workbook
+Dim Act_Sheet As Worksheet
+Dim Source_Sheet As Worksheet
+Dim varFname As Variant
+Dim varLine As Integer
+Dim varRecords As Integer
+Dim Flag As Boolean
+
+
+Set ThisBook = Application.ThisWorkbook
+Set Act_Sheet = ThisBook.Sheets("Actionscript")
+Set Source_Sheet = ThisBook.Sheets("Request Sheet")
+varLine = 1
+
+Act_Sheet.Cells.Clear
+
+'Find the number of varRecords to be processed
+varRecords = Source_Sheet.Range("A" & Rows.Count).End(xlUp).Row
+
+'Parse the record list to generate Actionscript
+For i = 6 To varRecords
+Flag = False
+
+If Source_Sheet.Cells(i, 1).Value = "Add" And Left(Source_Sheet.Cells(i, 2).Value, 3) = "GB_" And Source_Sheet.Cells(i, 3).Value <> "" _
+ And Len(Source_Sheet.Cells(i, 4).Value) > 0 Then
+
+    Act_Sheet.Cells(varLine, 1).Value = "Add"
+    Act_Sheet.Cells(varLine, 2).Value = Source_Sheet.Range("VERSION").Value
+    Act_Sheet.Cells(varLine, 3).Value = "Gameboard"
+    Act_Sheet.Cells(varLine, 4).Value = Source_Sheet.Cells(i, 2).Value
+    Act_Sheet.Cells(varLine, 5).Value = Source_Sheet.Range("PARENT").Value
+    Act_Sheet.Cells(varLine, 6).Value = "True"
+    Act_Sheet.Cells(varLine, 7).Value = Source_Sheet.Cells(i, 3).Value
+
+    varLine = varLine + 1
+    
+    'If Source_Sheet.Cells(i, 3).Value <> "" Then
+     Act_Sheet.Cells(varLine, 1).Value = "ChangeProp"
+     Act_Sheet.Cells(varLine, 2).Value = Source_Sheet.Range("VERSION").Value
+     Act_Sheet.Cells(varLine, 3).Value = "Gameboard"
+     Act_Sheet.Cells(varLine, 4).Value = Source_Sheet.Cells(i, 2).Value
+     Act_Sheet.Cells(varLine, 5).Value = "GB Created Date"
+     Act_Sheet.Cells(varLine, 6).Value = Source_Sheet.Cells(i, 4).Value
+     varLine = varLine + 1
+    'End If
+    Flag = True
+Else
+  If Source_Sheet.Cells(i, 1).Value = "Delete" And Left(Source_Sheet.Cells(i, 2).Value, 3) = "GB_" Then
+     Act_Sheet.Cells(varLine, 1).Value = "ChangeProp"
+     Act_Sheet.Cells(varLine, 2).Value = Source_Sheet.Range("VERSION").Value
+     Act_Sheet.Cells(varLine, 3).Value = "Gameboard"
+     Act_Sheet.Cells(varLine, 4).Value = Source_Sheet.Cells(i, 2).Value
+     Act_Sheet.Cells(varLine, 5).Value = "Enabled"
+     Act_Sheet.Cells(varLine, 6).Value = "False"
+     varLine = varLine + 1
+     Flag = True
+
+  End If
+  
+End If
+
+ Source_Sheet.Cells(i, 5).Value = Flag
+
+Next i
+
+Act_Sheet.Activate
+Act_Sheet.Range("A1").Select
+
+'Display the save file dialog
+varFname = Application.GetSaveAsFilename(InitialFileName:="GB_Actionscript.txt", _
+            FileFilter:="Text Files (*.txt), *.txt", Title:="Save Actionscript")
+
+'Check to ensure the user hasn't canceled the dialog
+If varFname <> False Then
+ Application.DisplayAlerts = False
+ Application.ScreenUpdating = False
+ Act_Sheet.Copy
+ ActiveWorkbook.SaveAs Filename:=varFname, FileFormat:=xlUnicodeText
+ ActiveWorkbook.Close
+ Application.DisplayAlerts = True
+ Application.ScreenUpdating = True
+ 
+ Exit Sub
+End If
+
+
+End Sub
+
+
+Sub Clear_Sheet()
+
+Dim ThisBook As Workbook
+Dim Source_Sheet As Worksheet
+
+Set ThisBook = Application.ThisWorkbook
+Set Source_Sheet = ThisBook.Sheets("Request Sheet")
+
+Source_Sheet.Range("INPUT").ClearContents
+End Sub
